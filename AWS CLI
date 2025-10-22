@@ -1,0 +1,100 @@
+# 🚀 Operações com Amazon EC2
+
+Este guia resume as operações essenciais para **criação, conexão e configuração** de instâncias EC2 na AWS.  
+Pronto para estudo e aplicação prática.  
+
+---
+
+## 🎯 Objetivos
+
+- Criar uma instância EC2 (bastion host) pelo Console AWS  
+- Conectar ao bastion host via **EC2 Instance Connect**  
+- Criar uma instância EC2 (web server) usando **AWS CLI**  
+
+---
+
+## 💻 Passo a Passo Completo
+
+```bash
+# 1. Criar Instância Bastion Host pelo Console
+# --------------------------------------------
+# No Console AWS, procure por "EC2"
+# Clique em "Launch instance"
+# Configure os parâmetros:
+#   - Nome: Bastion host
+#   - AMI: Amazon Linux 2
+#   - Tipo de instância: t3.micro
+#   - Key pair: Proceed without key pair
+#   - VPC/Subnet: Lab VPC / Public Subnet
+#   - Security Group:
+#       Nome: Bastion security group
+#       Descrição: Permit SSH connections
+#   - IAM Role: Bastion-Role
+# Clique em "Launch instance"
+
+# 2. Conectar ao Bastion Host
+# ---------------------------
+# No Console AWS, selecione a instância Bastion host
+# Clique em "Connect" → "EC2 Instance Connect"
+# Clique em "Connect" para abrir o terminal
+
+# 3. Criar Web Server via AWS CLI
+# -------------------------------
+
+# 3.1 Definir Região e Recuperar AMI
+AZ=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+export AWS_DEFAULT_REGION=${AZ::-1}
+
+AMI=$(aws ssm get-parameters \
+  --names /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2 \
+  --query 'Parameters[0].[Value]' \
+  --output text)
+
+echo "AMI usada: $AMI"
+
+# 3.2 Recuperar Subnet
+SUBNET=$(aws ec2 describe-subnets \
+  --filters 'Name=tag:Name,Values=Public Subnet' \
+  --query Subnets[].SubnetId \
+  --output text)
+
+echo "Subnet usada: $SUBNET"
+
+# 3.3 Recuperar Security Group
+SG=$(aws ec2 describe-security-groups \
+  --filters Name=group-name,Values=WebSecurityGroup \
+  --query SecurityGroups[].GroupId \
+  --output text)
+
+echo "Security Group usado: $SG"
+
+# 3.4 Baixar Script de Inicialização
+wget https://aws-tc-largeobjects.s3.us-west-2.amazonaws.com/CUR-TF-100-RSJAWS-1-23732/171-lab-JAWS-create-ec2/s3/UserData.txt
+cat UserData.txt
+
+# 3.5 Criar Instância (Web Server)
+INSTANCE=$(
+aws ec2 run-instances \
+--image-id $AMI \
+--subnet-id $SUBNET \
+--security-group-ids $SG \
+--user-data file:///home/ec2-user/UserData.txt \
+--instance-type t3.micro \
+--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=Web Server}]' \
+--query 'Instances[*].InstanceId' \
+--output text
+)
+
+echo "Instância criada: $INSTANCE"
+
+# 3.6 Verificar Status da Instância
+aws ec2 describe-instances --instance-ids $INSTANCE \
+--query 'Reservations[].Instances[].State.Name' \
+--output text
+
+# 3.7 Obter Endereço do Web Server
+aws ec2 describe-instances --instance-ids $INSTANCE \
+--query Reservations[].Instances[].PublicDnsName \
+--output text
+
+# Copie o endereço retornado e cole no navegador para acessar o servidor web.
