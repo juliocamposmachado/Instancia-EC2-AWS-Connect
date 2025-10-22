@@ -165,8 +165,3 @@ Ao final deste procedimento, você terá:
 📧 **Contato:** [juliocamposmachado@gmail.com](mailto:juliocamposmachado@gmail.com)
 
 ```
-
----
-
-Deseja que eu adicione também uma seção de **pré-requisitos técnicos** (como: “ter AWS CLI configurado”, “possuir IAM Role com permissões adequadas”, etc.) e uma **versão em inglês** para uso profissional no GitHub internacional? Isso deixaria o documento mais completo e atrativo.
-```
