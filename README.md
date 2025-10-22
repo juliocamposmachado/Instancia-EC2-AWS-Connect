@@ -163,5 +163,3 @@ Ao final deste procedimento, você terá:
 📘 **Autor:** Julio Campos Machado
 🧩 **Empresas:** Like Look Solutions | Rádio Tatuapé FM
 📧 **Contato:** [juliocamposmachado@gmail.com](mailto:juliocamposmachado@gmail.com)
-
-```
